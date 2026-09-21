@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Student Activity Tracker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS (xlsx) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#bae0fd',
+              300: '#7cc5fb',
+              400: '#38a5f8',
+              500: '#0e87eb',
+              600: '#026bc9',
+              700: '#0355a3',
+              800: '#074886',
+              900: '#0c3d6f',
+              950: '#08274a',
+            }
+          },
+          boxShadow: {
+            'subtle': '0 2px 10px -2px rgba(15, 23, 42, 0.05), 0 1px 3px -1px rgba(15, 23, 42, 0.05)',
+            'card': '0 8px 30px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03)',
+            'elevated': '0 20px 40px -12px rgba(15, 23, 42, 0.12)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      -webkit-tap-highlight-color: transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen font-sans antialiased flex flex-col selection:bg-brand-600 selection:text-white pb-safe">
+  
+  <!-- Top Navigation Header -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-subtle transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      
+      <!-- Brand & Rep Info -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-sky-500 text-white flex items-center justify-center shadow-md shadow-brand-500/25 flex-shrink-0">
+          <i data-lucide="graduation-cap" class="w-5 h-5 sm:w-6 sm:h-6"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-tight truncate">
+            Student Activity Tracker
+          </h1>
+          <p class="text-[11px] sm:text-xs font-semibold text-brand-700 mt-0.5 flex items-center gap-1.5 truncate">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Student Rep: <span class="font-bold text-slate-900">Taher Ahmedabadwala</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Actions Header (Adaptive Mobile Grid) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0 w-full sm:w-auto">
+        <button onclick="openAddStudentModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl shadow-xs transition touch-manipulation">
+          <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+          <span>Add Student</span>
+        </button>
+        <button onclick="exportToExcel(true)" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-50 hover:bg-brand-100 active:scale-[0.98] text-brand-800 border border-brand-200 text-xs font-bold rounded-xl transition touch-manipulation">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-brand-600"></i>
+          <span>Export Week</span>
+        </button>
+        <button onclick="exportToExcel(false)" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl shadow-xs transition touch-manipulation">
+          <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+          <span>Export All</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 space-y-5 sm:space-y-6 w-full">
+    
+    <!-- Week Selector Navigation Banner -->
+    <div class="bg-gradient-to-br from-slate-900 via-brand-950 to-brand-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-card relative overflow-hidden border border-slate-800">
+      <div class="absolute -right-10 -bottom-10 w-48 sm:w-60 h-48 sm:h-60 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 text-brand-200 backdrop-blur-md border border-white/10">
+            <i data-lucide="users" class="w-3.5 h-3.5 text-brand-400"></i>
+            <span>Master Loaded: MBA 2026-28 Batch (<span id="masterTotalCount">44</span> Students)</span>
+          </div>
+          <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">Activity Ledger by Week</h2>
+          <p class="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed">
+            Switch between weeks to log, update or edit records. Fresh weeks automatically start with clean registers while master records remain intact.
+          </p>
+        </div>
+
+        <!-- Week Dropdown Bar -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 bg-white/10 backdrop-blur-md p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border border-white/15">
+          <div class="flex-1">
+            <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-300 mb-1 px-1">Selected Week:</label>
+            <select id="weekSelector" onchange="onWeekSelectionChange(event)" class="w-full bg-white text-slate-900 font-bold text-xs rounded-lg sm:rounded-xl px-3 py-2 outline-none shadow-sm cursor-pointer border-0">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          <button onclick="goToCurrentWeek()" class="px-3.5 py-2 sm:py-2.5 bg-brand-600/80 hover:bg-brand-600 active:scale-[0.98] text-white text-xs font-bold rounded-lg sm:rounded-xl border border-white/20 transition flex items-center justify-center gap-1.5 mt-1 sm:mt-4">
+            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            <span>Current Week</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Grid: Trainee Search (Left) + Activity Input (Right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+      
+      <!-- Step 1: Student Search Card (5 cols on desktop) -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card">
+          <div class="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-extrabold">1</span>
+                Find Student
+              </h3>
+              <p class="text-[11px] text-slate-400 mt-0.5">Search MBA 2026-28 Batch by Name</p>
+            </div>
+            <button onclick="openAddStudentModal()" class="text-xs text-brand-600 hover:text-brand-700 font-bold inline-flex items-center gap-1 p-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add New
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <label class="block text-[11px] font-bold text-slate-600 mb-1.5 uppercase tracking-wide flex items-center justify-between">
+              <span>Type Student Name</span>
+              <span class="text-[10px] text-slate-400 lowercase font-normal hidden sm:inline">Press <kbd class="px-1 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] font-mono">Esc</kbd> to clear</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-brand-600">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </div>
+              <input 
+                type="text" 
+                id="traineeSearchInput" 
+                placeholder="Type name (e.g., Gokul, Praveena, Taher)..."
+                class="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 focus:border-brand-600 focus:ring-4 focus:ring-brand-500/10 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 outline-none transition"
+                autocomplete="off"
+                oninput="onSearchInput(event)"
+                onfocus="onSearchFocus()"
+                onkeydown="onSearchKeyDown(event)"
+              >
+              <button 
+                id="clearSearchBtn" 
+                onclick="clearSelectedTrainee()" 
+                class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Autocomplete Suggestions Dropdown -->
+            <div id="suggestionsDropdown" class="hidden absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-elevated border border-slate-200 max-h-56 sm:max-h-64 overflow-y-auto z-50 divide-y divide-slate-100">
+            </div>
+          </div>
+
+          <!-- Matched Profile Badge & Display -->
+          <div class="mt-4">
+            <!-- Placeholder -->
+            <div id="emptyProfilePlaceholder" class="border-2 border-dashed border-slate-200/90 rounded-xl p-5 text-center bg-slate-50/70">
+              <div class="w-8 h-8 rounded-xl bg-brand-100 text-brand-600 mx-auto flex items-center justify-center mb-1.5">
+                <i data-lucide="user-search" class="w-4 h-4"></i>
+              </div>
+              <p class="text-xs font-bold text-slate-700">No Student Selected</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Pick an MBA student above to log activity</p>
+            </div>
+
+            <!-- Profile Info Card -->
+            <div id="profileCard" class="hidden bg-gradient-to-br from-brand-50/80 via-white to-sky-50/40 border border-brand-200 rounded-xl sm:rounded-2xl p-4 shadow-subtle relative">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-600 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center shadow-md shadow-brand-500/20 flex-shrink-0" id="profileAvatar">
+                  --
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <h4 class="text-sm sm:text-base font-bold text-slate-900 truncate" id="profileName">Student Name</h4>
+                    <span class="text-[9px] bg-brand-100 text-brand-800 px-1.5 py-0.5 rounded font-mono font-bold">Col C</span>
+                  </div>
+                  <p class="text-[11px] text-brand-700 font-mono font-semibold flex items-center gap-1 mt-0.5">
+                    <i data-lucide="tag" class="w-3 h-3 text-brand-500"></i>
+                    VTP: <span id="profileVtp" class="text-slate-900 font-bold">--</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-3.5 pt-3 border-t border-brand-100 grid grid-cols-1 gap-2 text-xs">
+                <div class="flex items-center justify-between bg-white px-2.5 py-2 rounded-lg border border-brand-100 shadow-2xs">
+                  <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
+                    <i data-lucide="award" class="w-3.5 h-3.5 text-brand-600"></i>
+                    <span>Mentor (Col T):</span>
+                  </span>
+                  <span class="font-bold text-slate-800 text-[11px] truncate max-w-[150px]" id="profileMentor">--</span>
+                </div>
+
+                <div class="flex items-center justify-between bg-white px-2.5 py-2 rounded-lg border border-brand-100 shadow-2xs">
+                  <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-600"></i>
+                    <span>Contact:</span>
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-mono font-bold text-slate-800 text-[11px]" id="profileContact">--</span>
+                    <a id="phoneCallLink" href="#" class="p-1 rounded text-brand-600 hover:bg-brand-50" title="Call">
+                      <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                    </a>
+                    <a id="whatsappLink" href="#" target="_blank" class="p-1 rounded text-emerald-600 hover:bg-emerald-50" title="WhatsApp">
+                      <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Activity Log Entry (7 cols on desktop) -->
+      <div class="lg:col-span-7">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card flex flex-col justify-between h-full">
+          <div>
+            <div class="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-extrabold">2</span>
+                  Activity / Violation Entry
+                </h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Auto-merges duplicate dates for the same student</p>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200">
+                Log Form
+              </span>
+            </div>
+
+            <!-- Date & Day Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  Record Date
+                </label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-brand-600">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                  </div>
+                  <input 
+                    type="date" 
+                    id="logDateInput" 
+                    class="w-full pl-9 pr-3 py-2 bg-slate-50 focus:bg-white border border-slate-200 focus:border-brand-600 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 outline-none transition"
+                    onchange="onDateInputChange()"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  Day & Week Assigned
+                </label>
+                <div id="dayDisplayBadge" class="h-[38px] sm:h-[42px] px-3 rounded-xl flex items-center justify-between border bg-slate-50 border-slate-200 text-slate-800 font-bold text-xs shadow-2xs">
+                  <span id="dayNameText" class="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-brand-600"></i>
+                    Monday
+                  </span>
+                  <span id="targetWeekBadge" class="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 font-mono font-extrabold text-[10px]">
+                    Week --
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Checkboxes -->
+            <div class="space-y-2.5 mb-4">
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                Activity / Violation Status:
+              </label>
+
+              <div class="space-y-2.5">
+                <!-- 1. Late to class -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-brand-50/30 transition">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                      <input type="checkbox" id="checkLate" onchange="toggleLateDropdown()" class="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 accent-brand-600 cursor-pointer">
+                      <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> Late to class
+                      </span>
+                    </label>
+
+                    <div id="lateDropdownContainer" class="flex items-center gap-1.5 opacity-40 pointer-events-none transition ml-auto">
+                      <span class="text-[10px] font-semibold text-slate-500">Timing:</span>
+                      <select id="lateSessionSelect" class="text-xs font-semibold bg-white border border-slate-300 rounded-lg px-2 py-1 outline-none focus:border-brand-600 text-slate-700 shadow-2xs">
+                        <option value="morning">morning</option>
+                        <option value="afternoon">afternoon</option>
+                        <option value="evening">evening</option>
+                        <option value="evening after break">evening after break</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Dresscode -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-brand-50/30 transition">
+                  <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" id="checkDress" class="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 accent-brand-600 cursor-pointer">
+                    <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-rose-500"></span> Dresscode
+                    </span>
+                  </label>
+                </div>
+
+                <!-- 3. Absent -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 transition space-y-2">
+                  <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" id="checkAbsent" onchange="toggleAbsentReason()" class="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 accent-brand-600 cursor-pointer">
+                    <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-red-600"></span> Absent
+                    </span>
+                  </label>
+
+                  <div id="absentReasonContainer" class="opacity-40 pointer-events-none transition">
+                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">
+                      Absence Reason <span class="font-normal text-slate-400">(Short paragraph - Optional)</span>
+                    </label>
+                    <textarea 
+                      id="absentReasonInput" 
+                      rows="2" 
+                      placeholder="Write brief reason if trainee notified mentor..."
+                      class="w-full px-2.5 py-1.5 bg-white border border-slate-300 focus:border-brand-600 rounded-lg text-xs text-slate-700 outline-none transition placeholder:text-slate-400 resize-none shadow-2xs"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <!-- 4. Discipline -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-brand-50/30 transition">
+                  <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input type="checkbox" id="checkDiscipline" class="w-4 h-4 rounded text-brand-600 border-slate-300 focus:ring-brand-500 accent-brand-600 cursor-pointer">
+                    <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-purple-600"></span> Discipline
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="pt-3 border-t border-slate-100 flex flex-row items-center justify-between gap-2">
+            <button 
+              type="button" 
+              onclick="resetLogForm()" 
+              class="px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-xl transition touch-manipulation">
+              Reset
+            </button>
+            <button 
+              type="button" 
+              onclick="saveLogEntry()" 
+              class="flex-1 sm:flex-initial px-4 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md shadow-brand-600/20 transition inline-flex items-center justify-center gap-1.5 touch-manipulation">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Save to Log Table</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Week Register Table with In-App Edit & Mobile Card Mode -->
+    <section id="exportSection" class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-extrabold">3</span>
+              Activity Register: <span id="activeWeekHeading" class="text-brand-700">Week --</span>
+            </h3>
+            <span id="logCountBadge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-100 text-brand-800 border border-brand-200">
+              0 Logged
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+            Click edit (<i data-lucide="pencil" class="w-3 h-3 inline text-brand-600"></i>) to modify violations or notes anytime.
+          </p>
+        </div>
+
+        <button 
+          onclick="clearActiveWeekLogs()" 
+          class="self-start sm:self-auto px-3 py-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200 transition inline-flex items-center gap-1.5">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Clear This Week</span>
+        </button>
+      </div>
+
+      <!-- Search Filter & Output Label -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+        <div class="relative w-full sm:w-72">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="logFilterInput" 
+            oninput="renderLogsTable()" 
+            placeholder="Search active logs..." 
+            class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500 text-xs font-medium"
+          >
+        </div>
+        <div class="text-slate-400 text-[10px] sm:text-[11px] w-full sm:w-auto text-right">
+          Excel Export Spacing: <span class="font-bold text-slate-600">1 Row/Day &bull; 2 Rows/Week</span>
+        </div>
+      </div>
+
+      <!-- Responsive Desktop Table View (Hidden on mobile) -->
+      <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200 max-h-96">
+        <table class="w-full text-left text-xs text-slate-600">
+          <thead class="bg-slate-50 text-slate-900 font-bold sticky top-0 z-10 border-b border-slate-200">
+            <tr>
+              <th class="p-3">#</th>
+              <th class="p-3">Date</th>
+              <th class="p-3">Day</th>
+              <th class="p-3">Student Name</th>
+              <th class="p-3">VTP No.</th>
+              <th class="p-3">Mentor Name</th>
+              <th class="p-3">Contact No.</th>
+              <th class="p-3">Violations Tagged</th>
+              <th class="p-3">Absent Reason</th>
+              <th class="p-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody" class="divide-y divide-slate-100 bg-white font-sans">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Responsive Mobile Card List View (Visible on mobile screens) -->
+      <div id="logsMobileCardList" class="block md:hidden space-y-3">
+        <!-- Dynamically rendered mobile cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="logsEmptyState" class="p-7 text-center bg-slate-50/70 rounded-xl border border-dashed border-slate-200">
+        <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center mx-auto mb-2">
+          <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+        </div>
+        <p class="text-xs sm:text-sm font-bold text-slate-800">No records in this week</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">This week's log is clear. Enter activity records above.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: In-App Edit Log Entry (Fully Mobile Responsive) -->
+  <div id="editLogModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center font-bold">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-none">Edit Activity Log</h4>
+            <p class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5" id="editModalSubtitle">Editing log</p>
+          </div>
+        </div>
+        <button onclick="closeEditLogModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="editLogForm" onsubmit="handleSaveEditedLog(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="editLogId">
+
+        <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Student:</span>
+            <p class="font-bold text-slate-900 truncate text-xs" id="editStudentName">--</p>
+          </div>
+          <div>
+            <span class="text-slate-400 text-[10px] uppercase font-bold">Date & Day:</span>
+            <p class="font-bold text-slate-900 truncate text-xs" id="editDateText">--</p>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-bold text-slate-700 uppercase tracking-wide text-[10px]">Update Violation Flags:</label>
+          
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="editCheckLate" onchange="toggleEditLateDropdown()" class="w-4 h-4 rounded text-brand-600 accent-brand-600">
+              <span class="font-bold text-slate-800 text-xs">Late to class</span>
+            </label>
+            <div id="editLateDropdownContainer" class="flex items-center gap-1.5 opacity-40 pointer-events-none">
+              <select id="editLateSessionSelect" class="text-xs bg-white border border-slate-300 rounded-lg px-2 py-1 outline-none">
+                <option value="morning">morning</option>
+                <option value="afternoon">afternoon</option>
+                <option value="evening">evening</option>
+                <option value="evening after break">evening after break</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="editCheckDress" class="w-4 h-4 rounded text-brand-600 accent-brand-600">
+              <span class="font-bold text-slate-800 text-xs">Dresscode</span>
+            </label>
+          </div>
+
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="editCheckAbsent" onchange="toggleEditAbsentReason()" class="w-4 h-4 rounded text-brand-600 accent-brand-600">
+              <span class="font-bold text-slate-800 text-xs">Absent</span>
+            </label>
+            <div id="editAbsentReasonContainer" class="opacity-40 pointer-events-none">
+              <textarea id="editAbsentReasonInput" rows="2" placeholder="Optional absence explanation..." class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs outline-none resize-none"></textarea>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" id="editCheckDiscipline" class="w-4 h-4 rounded text-brand-600 accent-brand-600">
+              <span class="font-bold text-slate-800 text-xs">Discipline</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeEditLogModal()" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 active:scale-95 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-sm active:scale-95 transition">Update Entry</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Student (Mobile Responsive) -->
+  <div id="addStudentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-none">Add New Student</h4>
+            <p class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Saves directly to persistent roster</p>
+          </div>
+        </div>
+        <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="newStudentForm" onsubmit="handleAddNewStudent(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Student Full Name (Col C) *</label>
+          <input type="text" id="newStudentName" required placeholder="e.g., Rahul Sharma" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-brand-600 text-slate-800">
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">VTP No. *</label>
+            <input type="text" id="newStudentVtp" required placeholder="e.g., VTP5100" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-brand-600 text-slate-800">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Phone (Col G)</label>
+            <input type="text" id="newStudentPhone" placeholder="e.g., 9876543210" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-brand-600 text-slate-800">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Mentor Name (Col T)</label>
+          <input type="text" id="newStudentMentor" placeholder="e.g., Dr. P. William Robert" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-brand-600 text-slate-800">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 active:scale-95 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm active:scale-95 transition">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none items-center sm:items-end"></div>
+
+  <!-- Custom Confirmation Modal -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xs sm:max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center space-y-3 animate-in fade-in zoom-in-95 duration-150">
+      <div class="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center mx-auto" id="modalIcon">
+        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h4 class="text-sm sm:text-base font-bold text-slate-900" id="modalTitle">Confirm Action</h4>
+        <p class="text-xs text-slate-500 mt-1" id="modalDescription">Are you sure?</p>
+      </div>
+      <div class="flex items-center justify-center gap-2 pt-2">
+        <button onclick="closeModal()" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 active:scale-95 transition">
+          Cancel
+        </button>
+        <button id="modalConfirmBtn" class="flex-1 py-2 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold active:scale-95 transition">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-3.5 mt-6 text-center text-[11px] text-slate-400">
+    <p>Student Activity Tracker &bull; Student Representative: Taher Ahmedabadwala</p>
+  </footer>
+
+  <script>
+    // State management
+    let masterData = [];
+    let searchIndex = [];
+    let selectedTrainee = null;
+    let logsList = [];
+    let activeWeekKey = '';
+    let modalCallback = null;
+    let focusedSuggestionIndex = -1;
+
+    const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    // Official MBA 2026-28 Batch Master Dataset extracted directly from MBA Student Details 1.xlsx
+    const MBA_MASTER_DATASET = [
+      {"rowNumber": 2, "name": "GOKUL J", "vtp": "VTP5055", "contact": "638356039", "mentor": "Dr.M. Felisiya"},
+      {"rowNumber": 3, "name": "PRAVEENA R", "vtp": "VTP5056", "contact": "9361196910", "mentor": "Felisiya"},
+      {"rowNumber": 4, "name": "TANGELLA BALAJI", "vtp": "VTP5059", "contact": "9094896979", "mentor": "Ms. M. Felisiya"},
+      {"rowNumber": 5, "name": "MANI KANDAN S", "vtp": "VTP5061", "contact": "7010955146", "mentor": "Dr.p.William Robert"},
+      {"rowNumber": 6, "name": "HARIPRASATH V", "vtp": "VTP5062", "contact": "8610090939", "mentor": "Dr.P. William robert"},
+      {"rowNumber": 7, "name": "TAHER AHMEDABADWALA", "vtp": "VTP5063", "contact": "9952053501", "mentor": "Dr. P. WilliamRobert"},
+      {"rowNumber": 8, "name": "RESMA KAMALI", "vtp": "VTP5066", "contact": "908016013", "mentor": "DR.P. WILLIAM ROBERT"},
+      {"rowNumber": 9, "name": "GOKUL R", "vtp": "VTP5068", "contact": "8072034418", "mentor": "Dr.P.William Robert"},
+      {"rowNumber": 10, "name": "YUSUF S", "vtp": "VTP5069", "contact": "8248463116", "mentor": "Dr. P.WilliamRobert"},
+      {"rowNumber": 11, "name": "OM TIWARY", "vtp": "VTP5071", "contact": "8310799198", "mentor": "Dr. P William Robert"},
+      {"rowNumber": 12, "name": "SARUHASAN", "vtp": "VTP5072", "contact": "63834 84716", "mentor": "Dr. P.  William Robert"},
+      {"rowNumber": 13, "name": "RHITHIKA D", "vtp": "VTP5074", "contact": "6381531203", "mentor": "Dr.P Tamil Selvan"},
+      {"rowNumber": 14, "name": "PRIYANGA", "vtp": "VTP5076", "contact": "8778245572", "mentor": "DR.P.WILLIAM ROBERT"},
+      {"rowNumber": 15, "name": "HARISH A", "vtp": "VTP5077", "contact": "8608331371", "mentor": "Dr.P.Tamil selvan"},
+      {"rowNumber": 16, "name": "PRIYADHARSHINI R", "vtp": "VTP5091", "contact": "6385694436", "mentor": "Mr.M.Felisiya"},
+      {"rowNumber": 17, "name": "R .DIVYA", "vtp": "VTP5092", "contact": "8124918727", "mentor": "Dr.P.William Robert"},
+      {"rowNumber": 18, "name": "S.KANNAN", "vtp": "VTP5097", "contact": "7358093875", "mentor": "Dr.P.William Robert"},
+      {"rowNumber": 19, "name": "THEJA SHRI M", "vtp": "VTP5098", "contact": "9043657252", "mentor": "Dr. P. WILLIAM ROBERT"},
+      {"rowNumber": 20, "name": "VAIRAVASUNDHARAM P", "vtp": "VTP5099", "contact": "N/A", "mentor": "Unassigned"},
+      {"rowNumber": 21, "name": "ASWIN.M", "vtp": "VTP5100", "contact": "7299959444", "mentor": "Dr. P. William Robert"},
+      {"rowNumber": 22, "name": "MOHAN T", "vtp": "VTP5101", "contact": "9087454150", "mentor": "Dr.P.William Robert"},
+      {"rowNumber": 23, "name": "V.R VIGNESHWARAN", "vtp": "VTP5105", "contact": "8939434650", "mentor": "WILLIAM ROBERT"},
+      {"rowNumber": 24, "name": "GUNASEKARAN D", "vtp": "VTP5108", "contact": "9500597660", "mentor": "DR.P.TAMILSELVAN"},
+      {"rowNumber": 25, "name": "S.GAYATHRI", "vtp": "VTP5109", "contact": "9962441891", "mentor": "Dr. P. Tamilselvan"},
+      {"rowNumber": 26, "name": "SRIHARAN S", "vtp": "VTP5111", "contact": "9677321244", "mentor": "Dr tamil selven"},
+      {"rowNumber": 27, "name": "AKASH.R", "vtp": "VTP5112", "contact": "8122880324", "mentor": "Dr.P.TamilSelvan"},
+      {"rowNumber": 28, "name": "M.SANTHOSH", "vtp": "VTP5113", "contact": "N/A", "mentor": "Unassigned"},
+      {"rowNumber": 29, "name": "G JASWANTH", "vtp": "VTP5114", "contact": "9360483990", "mentor": "Dr. P Tamilselvan"},
+      {"rowNumber": 30, "name": "SHIVANI PATHAK R", "vtp": "VTP5115", "contact": "9361348375", "mentor": "Dr. P. Tamilselvan"},
+      {"rowNumber": 31, "name": "SYED MUNA. S", "vtp": "VTP5117", "contact": "9363217239", "mentor": "TAMIL SELVAN"},
+      {"rowNumber": 32, "name": "SACHIEL KUMAR .M", "vtp": "VTP5118", "contact": "6382847443", "mentor": "Tamil Selvan"},
+      {"rowNumber": 33, "name": "POOJA R", "vtp": "VTP5122", "contact": "6381471669", "mentor": "UMA PARVATHY"},
+      {"rowNumber": 34, "name": "PREM KUMAR D", "vtp": "VTP5126", "contact": "7305815518", "mentor": "UMA PARVATHY"},
+      {"rowNumber": 35, "name": "N AJAY TARUN", "vtp": "VTP5130", "contact": "N/A", "mentor": "Unassigned"},
+      {"rowNumber": 36, "name": "E R NIVETHA", "vtp": "VTP5131", "contact": "8220991180", "mentor": "Dr. P. Tamilselvan"},
+      {"rowNumber": 37, "name": "KARTHIK T", "vtp": "VTP5136", "contact": "9626131544", "mentor": "UMA PARVATHY"},
+      {"rowNumber": 38, "name": "NANDHINI.S", "vtp": "VTP5152", "contact": "09940476828", "mentor": "Dr P william robert"},
+      {"rowNumber": 39, "name": "GOKUL B", "vtp": "VTP5157", "contact": "06380683419", "mentor": "Dr.S.Uma Parvathy"},
+      {"rowNumber": 40, "name": "RAHUL K", "vtp": "VTP5426", "contact": "8754728994", "mentor": "Unassigned"},
+      {"rowNumber": 41, "name": "Jeevan Raj", "vtp": "VTP5428", "contact": "6381472581", "mentor": "UMA PARVATHY"},
+      {"rowNumber": 42, "name": "Ronda Narasimhulu", "vtp": "VTP5431", "contact": "7013480849", "mentor": "Unassigned"},
+      {"rowNumber": 43, "name": "Akash S", "vtp": "VTP", "contact": "6369623574", "mentor": "Dr. P. Tamilselvan"},
+      {"rowNumber": 44, "name": "Venuprathap S M", "vtp": "VTP", "contact": "6374782078", "mentor": "Unassigned"},
+      {"rowNumber": 45, "name": "sharath y", "vtp": "VTP", "contact": "6380843428", "mentor": "Dr.S.Uma Parvathy"}
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setDefaultDate();
+      loadPersistentMasterData();
+      loadStoredLogs();
+      initWeekSelector();
+      setupKeyboardShortcuts();
+      toggleLateDropdown();
+      toggleAbsentReason();
+    });
+
+    function setupKeyboardShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          saveLogEntry();
+        }
+      });
+    }
+
+    function getWeekKey(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const target = new Date(d.valueOf());
+      const dayNr = (d.getDay() + 6) % 7;
+      target.setDate(target.getDate() - dayNr + 3);
+      const firstThursday = target.valueOf();
+      target.setMonth(0, 1);
+      if (target.getDay() !== 4) {
+        target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+      }
+      const weekNumber = 1 + Math.ceil((firstThursday - target) / 604800000);
+      return `${d.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+    }
+
+    function getWeekRangeLabel(weekKey) {
+      const parts = weekKey.split('-W');
+      const year = parseInt(parts[0], 10);
+      const week = parseInt(parts[1], 10);
+
+      const simple = new Date(year, 0, 4);
+      const dayOfWeek = (simple.getDay() + 6) % 7;
+      const monday = new Date(simple.getFullYear(), 0, 4 - dayOfWeek + (week - 1) * 7);
+      const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+
+      const opt = { month: 'short', day: 'numeric' };
+      return `${weekKey} (${monday.toLocaleDateString(undefined, opt)} - ${sunday.toLocaleDateString(undefined, opt)})`;
+    }
+
+    function initWeekSelector() {
+      const todayDate = document.getElementById('logDateInput').value;
+      const currentWeek = getWeekKey(todayDate);
+
+      const weekKeysSet = new Set(logsList.map(l => l.weekKey || getWeekKey(l.date)));
+      weekKeysSet.add(currentWeek);
+
+      const sortedWeeks = Array.from(weekKeysSet).sort().reverse();
+      const selector = document.getElementById('weekSelector');
+      selector.innerHTML = '';
+
+      sortedWeeks.forEach(wKey => {
+        const opt = document.createElement('option');
+        opt.value = wKey;
+        opt.textContent = (wKey === currentWeek ? '⭐ ' : '') + getWeekRangeLabel(wKey);
+        selector.appendChild(opt);
+      });
+
+      if (!activeWeekKey || !weekKeysSet.has(activeWeekKey)) {
+        activeWeekKey = currentWeek;
+      }
+      selector.value = activeWeekKey;
+      updateActiveWeekHeading();
+      renderLogsTable();
+    }
+
+    function onWeekSelectionChange(e) {
+      activeWeekKey = e.target.value;
+      updateActiveWeekHeading();
+      renderLogsTable();
+      updateHeaderCounts();
+    }
+
+    function goToCurrentWeek() {
+      const todayDate = document.getElementById('logDateInput').value;
+      const currentWeek = getWeekKey(todayDate);
+      activeWeekKey = currentWeek;
+      document.getElementById('weekSelector').value = activeWeekKey;
+      updateActiveWeekHeading();
+      renderLogsTable();
+      updateHeaderCounts();
+    }
+
+    function updateActiveWeekHeading() {
+      document.getElementById('activeWeekHeading').textContent = getWeekRangeLabel(activeWeekKey);
+    }
+
+    function onDateInputChange() {
+      updateDayOfWeekDisplay();
+      const dateVal = document.getElementById('logDateInput').value;
+      if (dateVal) {
+        const week = getWeekKey(dateVal);
+        document.getElementById('targetWeekBadge').textContent = week;
+      }
+    }
+
+    function loadPersistentMasterData() {
+      try {
+        // Use v3 storage key to ensure newly supplied MBA Master Data supersedes mock data
+        const stored = localStorage.getItem('sat_master_trainees_mba_v3');
+        if (stored) {
+          masterData = JSON.parse(stored);
+        } else {
+          masterData = MBA_MASTER_DATASET;
+          persistMasterData();
+        }
+      } catch (e) {
+        masterData = MBA_MASTER_DATASET;
+      }
+      document.getElementById('masterTotalCount').textContent = masterData.length;
+      buildFastSearchIndex();
+    }
+
+    function persistMasterData() {
+      try {
+        localStorage.setItem('sat_master_trainees_mba_v3', JSON.stringify(masterData));
+        document.getElementById('masterTotalCount').textContent = masterData.length;
+      } catch (e) {
+        console.warn('LocalStorage error', e);
+      }
+    }
+
+    function openAddStudentModal() {
+      document.getElementById('newStudentForm').reset();
+      document.getElementById('addStudentModal').classList.remove('hidden');
+      document.getElementById('newStudentName').focus();
+    }
+
+    function closeAddStudentModal() {
+      document.getElementById('addStudentModal').classList.add('hidden');
+    }
+
+    function handleAddNewStudent(e) {
+      e.preventDefault();
+      const name = document.getElementById('newStudentName').value.trim();
+      const vtp = document.getElementById('newStudentVtp').value.trim();
+      const phone = document.getElementById('newStudentPhone').value.trim() || 'N/A';
+      const mentor = document.getElementById('newStudentMentor').value.trim() || 'Unassigned';
+
+      if (!name || !vtp) return;
+
+      const newEntry = {
+        rowNumber: masterData.length + 2,
+        name: name,
+        vtp: vtp,
+        contact: phone,
+        mentor: mentor
+      };
+
+      masterData.push(newEntry);
+      persistMasterData();
+      buildFastSearchIndex();
+
+      closeAddStudentModal();
+      showToast(`Added ${name} to Master Records`, 'success');
+      selectTrainee(newEntry);
+    }
+
+    function toggleLateDropdown() {
+      const checkLate = document.getElementById('checkLate');
+      const container = document.getElementById('lateDropdownContainer');
+      if (checkLate.checked) {
+        container.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        container.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function toggleAbsentReason() {
+      const checkAbsent = document.getElementById('checkAbsent');
+      const container = document.getElementById('absentReasonContainer');
+      if (checkAbsent.checked) {
+        container.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        container.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function setDefaultDate() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      const dateInput = document.getElementById('logDateInput');
+      dateInput.value = todayStr;
+      onDateInputChange();
+    }
+
+    function updateDayOfWeekDisplay() {
+      const dateInput = document.getElementById('logDateInput');
+      if (!dateInput.value) return;
+
+      const dateObj = new Date(dateInput.value + 'T00:00:00');
+      const dayIndex = dateObj.getDay();
+      const dayName = DAY_NAMES[dayIndex];
+
+      const dayTextEl = document.getElementById('dayNameText');
+      dayTextEl.innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5 text-brand-600 inline"></i> ${dayName}`;
+      lucide.createIcons();
+    }
+
+    function buildFastSearchIndex() {
+      searchIndex = masterData.map(item => ({
+        trainee: item,
+        nameNormalized: item.name.toLowerCase(),
+        nameWords: item.name.toLowerCase().split(/\s+/),
+        vtpNormalized: item.vtp.toLowerCase()
+      }));
+    }
+
+    function onSearchInput(e) {
+      const query = e.target.value.trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      focusedSuggestionIndex = -1;
+
+      if (query.length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+        hideDropdown();
+        return;
+      }
+
+      const matches = [];
+      for (let i = 0; i < searchIndex.length; i++) {
+        const item = searchIndex[i];
+        if (item.nameNormalized.startsWith(query)) {
+          matches.push({ trainee: item.trainee, score: 3 });
+        } else if (item.nameWords.some(w => w.startsWith(query))) {
+          matches.push({ trainee: item.trainee, score: 2 });
+        } else if (item.nameNormalized.includes(query) || item.vtpNormalized.includes(query)) {
+          matches.push({ trainee: item.trainee, score: 1 });
+        }
+        if (matches.length >= 10 && query.length > 2) break;
+      }
+
+      matches.sort((a, b) => b.score - a.score);
+      const results = matches.map(m => m.trainee);
+
+      if (results.length === 0) {
+        showDropdownEmpty(`No student found matching "${escapeHtml(e.target.value)}"`);
+      } else {
+        renderSuggestions(results);
+      }
+    }
+
+    function onSearchFocus() {
+      const input = document.getElementById('traineeSearchInput');
+      if (input.value.trim().length > 0) {
+        onSearchInput({ target: input });
+      }
+    }
+
+    function onSearchKeyDown(e) {
+      const dropdown = document.getElementById('suggestionsDropdown');
+      const items = dropdown.querySelectorAll('.suggestion-item');
+
+      if (e.key === 'Escape') {
+        hideDropdown();
+        return;
+      }
+
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedSuggestionIndex = (focusedSuggestionIndex + 1) % items.length;
+        updateFocusedSuggestion(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedSuggestionIndex = (focusedSuggestionIndex - 1 + items.length) % items.length;
+        updateFocusedSuggestion(items);
+      } else if (e.key === 'Enter') {
+        if (focusedSuggestionIndex >= 0 && items[focusedSuggestionIndex]) {
+          e.preventDefault();
+          items[focusedSuggestionIndex].click();
+        }
+      }
+    }
+
+    function updateFocusedSuggestion(items) {
+      items.forEach((it, idx) => {
+        if (idx === focusedSuggestionIndex) {
+          it.classList.add('bg-brand-100/80', 'border-l-4', 'border-brand-600');
+          it.scrollIntoView({ block: 'nearest' });
+        } else {
+          it.classList.remove('bg-brand-100/80', 'border-l-4', 'border-brand-600');
+        }
+      });
+    }
+
+    function showDropdownEmpty(msg) {
+      const dropdown = document.getElementById('suggestionsDropdown');
+      dropdown.innerHTML = `
+        <div class="p-3.5 text-center text-xs text-slate-500 font-medium">
+          ${msg}
+          <div class="mt-2">
+            <button onclick="openAddStudentModal()" class="text-brand-600 hover:text-brand-800 font-bold underline">Add this student</button>
+          </div>
+        </div>
+      `;
+      dropdown.classList.remove('hidden');
+    }
+
+    function renderSuggestions(matches) {
+      const dropdown = document.getElementById('suggestionsDropdown');
+      dropdown.innerHTML = '';
+
+      matches.slice(0, 8).forEach((t) => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item px-3.5 py-2.5 hover:bg-slate-50 cursor-pointer transition flex items-center justify-between group';
+        item.innerHTML = `
+          <div class="min-w-0 pr-2">
+            <p class="text-xs font-bold text-slate-900 group-hover:text-brand-700 truncate">${escapeHtml(t.name)}</p>
+            <p class="text-[10px] text-slate-400 mt-0.5 truncate">
+              Mentor: <strong class="text-slate-600 font-semibold">${escapeHtml(t.mentor)}</strong> &bull; Tel: <span class="font-mono text-slate-600">${escapeHtml(t.contact)}</span>
+            </p>
+          </div>
+          <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold border border-slate-200">
+            ${escapeHtml(t.vtp)}
+          </span>
+        `;
+        item.onclick = () => selectTrainee(t);
+        dropdown.appendChild(item);
+      });
+
+      dropdown.classList.remove('hidden');
+    }
+
+    function hideDropdown() {
+      const dropdown = document.getElementById('suggestionsDropdown');
+      dropdown.classList.add('hidden');
+      focusedSuggestionIndex = -1;
+    }
+
+    document.addEventListener('click', (e) => {
+      const searchBox = document.getElementById('traineeSearchInput');
+      const dropdown = document.getElementById('suggestionsDropdown');
+      if (!searchBox.contains(e.target) && !dropdown.contains(e.target)) {
+        hideDropdown();
+      }
+    });
+
+    function selectTrainee(trainee) {
+      selectedTrainee = trainee;
+      document.getElementById('traineeSearchInput').value = trainee.name;
+      document.getElementById('clearSearchBtn').classList.remove('hidden');
+      hideDropdown();
+
+      document.getElementById('emptyProfilePlaceholder').classList.add('hidden');
+      document.getElementById('profileCard').classList.remove('hidden');
+      document.getElementById('selectedBadge').classList.remove('hidden');
+
+      const initials = trainee.name
+        .split(' ')
+        .filter(n => n.length > 0)
+        .map(n => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase() || 'ST';
+
+      document.getElementById('profileAvatar').textContent = initials;
+      document.getElementById('profileName').textContent = trainee.name;
+      document.getElementById('profileVtp').textContent = trainee.vtp;
+      document.getElementById('profileMentor').textContent = trainee.mentor;
+      document.getElementById('profileContact').textContent = trainee.contact;
+
+      const rawNumber = String(trainee.contact).replace(/[^0-9]/g, '');
+      const callLink = document.getElementById('phoneCallLink');
+      const waLink = document.getElementById('whatsappLink');
+
+      if (rawNumber && rawNumber.length >= 7) {
+        callLink.href = `tel:${rawNumber}`;
+        callLink.classList.remove('hidden');
+        waLink.href = `https://wa.me/${rawNumber}`;
+        waLink.classList.remove('hidden');
+      } else {
+        callLink.classList.add('hidden');
+        waLink.classList.add('hidden');
+      }
+
+      lucide.createIcons();
+    }
+
+    function clearSelectedTrainee() {
+      selectedTrainee = null;
+      document.getElementById('traineeSearchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      document.getElementById('emptyProfilePlaceholder').classList.remove('hidden');
+      document.getElementById('profileCard').classList.add('hidden');
+      document.getElementById('selectedBadge').classList.add('hidden');
+      hideDropdown();
+    }
+
+    function resetLogForm() {
+      document.getElementById('checkLate').checked = false;
+      document.getElementById('lateSessionSelect').value = 'morning';
+      document.getElementById('checkDress').checked = false;
+      document.getElementById('checkAbsent').checked = false;
+      document.getElementById('absentReasonInput').value = '';
+      document.getElementById('checkDiscipline').checked = false;
+      toggleLateDropdown();
+      toggleAbsentReason();
+    }
+
+    function saveLogEntry() {
+      if (!selectedTrainee) {
+        showToast('Please search and select a student first', 'error');
+        document.getElementById('traineeSearchInput').focus();
+        return;
+      }
+
+      const dateVal = document.getElementById('logDateInput').value;
+      if (!dateVal) {
+        showToast('Please select a valid record date', 'error');
+        return;
+      }
+
+      const dateObj = new Date(dateVal + 'T00:00:00');
+      const dayName = DAY_NAMES[dateObj.getDay()];
+      const targetWeek = getWeekKey(dateVal);
+
+      const isLate = document.getElementById('checkLate').checked;
+      const lateSession = document.getElementById('lateSessionSelect').value;
+      const isDress = document.getElementById('checkDress').checked;
+      const isAbsent = document.getElementById('checkAbsent').checked;
+      const absentReason = document.getElementById('absentReasonInput').value.trim();
+      const isDiscipline = document.getElementById('checkDiscipline').checked;
+
+      const newViolations = [];
+      const newLateSessions = [];
+
+      if (isLate) {
+        newViolations.push(`Late to class (${lateSession})`);
+        newLateSessions.push(lateSession);
+      }
+      if (isDress) newViolations.push("Dresscode");
+      if (isAbsent) newViolations.push("Absent");
+      if (isDiscipline) newViolations.push("Discipline");
+
+      const existingIndex = logsList.findIndex(item => 
+        item.date === dateVal && 
+        item.name.toLowerCase() === selectedTrainee.name.toLowerCase()
+      );
+
+      const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      if (existingIndex !== -1) {
+        const existing = logsList[existingIndex];
+        let combinedViolations = existing.violations.filter(v => v !== "Present / Normal");
+
+        newViolations.forEach(nv => {
+          if (!combinedViolations.includes(nv)) combinedViolations.push(nv);
+        });
+
+        let existingSessions = (existing.lateSession && existing.lateSession !== '-') 
+          ? existing.lateSession.split(', ').map(s => s.trim()) 
+          : [];
+
+        newLateSessions.forEach(ls => {
+          if (!existingSessions.includes(ls)) existingSessions.push(ls);
+        });
+
+        let combinedReason = existing.absentReason && existing.absentReason !== '-' && existing.absentReason !== 'No reason provided'
+          ? existing.absentReason 
+          : '';
+
+        if (isAbsent && absentReason) {
+          if (combinedReason && !combinedReason.includes(absentReason)) {
+            combinedReason += ` | ${absentReason}`;
+          } else if (!combinedReason) {
+            combinedReason = absentReason;
+          }
+        } else if (isAbsent && !combinedReason) {
+          combinedReason = 'No reason provided';
+        }
+
+        existing.violations = combinedViolations.length > 0 ? combinedViolations : ["Present / Normal"];
+        existing.hasViolations = combinedViolations.length > 0;
+        existing.lateSession = existingSessions.length > 0 ? existingSessions.join(', ') : '-';
+        existing.absentReason = combinedReason || '-';
+        existing.weekKey = targetWeek;
+        existing.loggedAt = currentTime;
+
+        showToast(`Updated entry for ${selectedTrainee.name}`, 'info');
+      } else {
+        const newLog = {
+          id: Date.now(),
+          date: dateVal,
+          day: dayName,
+          weekKey: targetWeek,
+          name: selectedTrainee.name,
+          vtp: selectedTrainee.vtp,
+          mentor: selectedTrainee.mentor,
+          contact: selectedTrainee.contact,
+          violations: newViolations.length > 0 ? newViolations : ["Present / Normal"],
+          hasViolations: newViolations.length > 0,
+          lateSession: newLateSessions.length > 0 ? newLateSessions.join(', ') : '-',
+          absentReason: (isAbsent && absentReason) ? absentReason : (isAbsent ? 'No reason provided' : '-'),
+          representative: 'Taher Ahmedabadwala',
+          loggedAt: currentTime
+        };
+
+        logsList.unshift(newLog);
+        showToast(`Saved record for ${selectedTrainee.name}`, 'success');
+      }
+
+      persistLogs();
+      activeWeekKey = targetWeek;
+      initWeekSelector();
+      document.getElementById('weekSelector').value = activeWeekKey;
+      updateActiveWeekHeading();
+
+      renderLogsTable();
+      updateHeaderCounts();
+
+      resetLogForm();
+      clearSelectedTrainee();
+      document.getElementById('traineeSearchInput').focus();
+    }
+
+    function openEditLogModal(id) {
+      const log = logsList.find(item => item.id === id);
+      if (!log) return;
+
+      document.getElementById('editLogId').value = log.id;
+      document.getElementById('editStudentName').textContent = `${log.name} (${log.vtp})`;
+      document.getElementById('editDateText').textContent = `${log.date} (${log.day})`;
+      document.getElementById('editModalSubtitle').textContent = `Assigned: ${log.weekKey || getWeekKey(log.date)}`;
+
+      const isLate = log.violations.some(v => v.includes('Late to class'));
+      document.getElementById('editCheckLate').checked = isLate;
+      document.getElementById('editLateSessionSelect').value = (log.lateSession && log.lateSession !== '-') ? log.lateSession.split(',')[0].trim() : 'morning';
+
+      document.getElementById('editCheckDress').checked = log.violations.includes('Dresscode');
+
+      const isAbsent = log.violations.includes('Absent');
+      document.getElementById('editCheckAbsent').checked = isAbsent;
+      document.getElementById('editAbsentReasonInput').value = (isAbsent && log.absentReason !== '-' && log.absentReason !== 'No reason provided') ? log.absentReason : '';
+
+      document.getElementById('editCheckDiscipline').checked = log.violations.includes('Discipline');
+
+      toggleEditLateDropdown();
+      toggleEditAbsentReason();
+
+      document.getElementById('editLogModal').classList.remove('hidden');
+    }
+
+    function closeEditLogModal() {
+      document.getElementById('editLogModal').classList.add('hidden');
+    }
+
+    function toggleEditLateDropdown() {
+      const check = document.getElementById('editCheckLate');
+      const container = document.getElementById('editLateDropdownContainer');
+      if (check.checked) {
+        container.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        container.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function toggleEditAbsentReason() {
+      const check = document.getElementById('editCheckAbsent');
+      const container = document.getElementById('editAbsentReasonContainer');
+      if (check.checked) {
+        container.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        container.classList.add('opacity-40', 'pointer-events-none');
+      }
+    }
+
+    function handleSaveEditedLog(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('editLogId').value, 10);
+      const logIndex = logsList.findIndex(item => item.id === id);
+      if (logIndex === -1) return;
+
+      const isLate = document.getElementById('editCheckLate').checked;
+      const lateSession = document.getElementById('editLateSessionSelect').value;
+      const isDress = document.getElementById('editCheckDress').checked;
+      const isAbsent = document.getElementById('editCheckAbsent').checked;
+      const absentReason = document.getElementById('editAbsentReasonInput').value.trim();
+      const isDiscipline = document.getElementById('editCheckDiscipline').checked;
+
+      const newViolations = [];
+      if (isLate) newViolations.push(`Late to class (${lateSession})`);
+      if (isDress) newViolations.push("Dresscode");
+      if (isAbsent) newViolations.push("Absent");
+      if (isDiscipline) newViolations.push("Discipline");
+
+      logsList[logIndex].violations = newViolations.length > 0 ? newViolations : ["Present / Normal"];
+      logsList[logIndex].hasViolations = newViolations.length > 0;
+      logsList[logIndex].lateSession = isLate ? lateSession : '-';
+      logsList[logIndex].absentReason = (isAbsent && absentReason) ? absentReason : (isAbsent ? 'No reason provided' : '-');
+      logsList[logIndex].loggedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (edited)';
+
+      persistLogs();
+      renderLogsTable();
+      closeEditLogModal();
+      showToast('Log entry updated', 'success');
+    }
+
+    function persistLogs() {
+      try {
+        localStorage.setItem('sat_records_log_weekly_v3', JSON.stringify(logsList));
+      } catch (e) {
+        console.warn('LocalStorage unavailable', e);
+      }
+    }
+
+    function loadStoredLogs() {
+      try {
+        const stored = localStorage.getItem('sat_records_log_weekly_v3');
+        if (stored) {
+          logsList = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Error loading logs', e);
+      }
+    }
+
+    function updateHeaderCounts() {
+      const activeLogs = logsList.filter(l => (l.weekKey || getWeekKey(l.date)) === activeWeekKey);
+      document.getElementById('logCountBadge').textContent = `${activeLogs.length} Logged`;
+    }
+
+    function renderLogsTable() {
+      const tbody = document.getElementById('logsTableBody');
+      const mobileList = document.getElementById('logsMobileCardList');
+      const emptyState = document.getElementById('logsEmptyState');
+      const filterVal = (document.getElementById('logFilterInput')?.value || '').toLowerCase().trim();
+
+      tbody.innerHTML = '';
+      mobileList.innerHTML = '';
+
+      const weekLogs = logsList.filter(log => (log.weekKey || getWeekKey(log.date)) === activeWeekKey);
+
+      const filtered = weekLogs.filter(log => {
+        if (!filterVal) return true;
+        return (
+          log.name.toLowerCase().includes(filterVal) ||
+          log.vtp.toLowerCase().includes(filterVal) ||
+          log.mentor.toLowerCase().includes(filterVal) ||
+          log.day.toLowerCase().includes(filterVal) ||
+          log.date.toLowerCase().includes(filterVal) ||
+          log.violations.join(' ').toLowerCase().includes(filterVal) ||
+          (log.absentReason && log.absentReason.toLowerCase().includes(filterVal))
+        );
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        filtered.forEach((log, index) => {
+          
+          let violationBadges = '';
+          if (!log.hasViolations) {
+            violationBadges = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Clear</span>`;
+          } else {
+            violationBadges = log.violations.map(v => {
+              let badgeStyle = 'bg-slate-100 text-slate-800 border-slate-200';
+              if (v.includes('Late')) badgeStyle = 'bg-amber-100 text-amber-900 border-amber-200';
+              else if (v.includes('Dresscode')) badgeStyle = 'bg-rose-100 text-rose-900 border-rose-200';
+              else if (v.includes('Absent')) badgeStyle = 'bg-red-100 text-red-900 border-red-200';
+              else if (v.includes('Discipline')) badgeStyle = 'bg-purple-100 text-purple-900 border-purple-200';
+              return `<span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold border ${badgeStyle} mr-1 mb-1">${escapeHtml(v)}</span>`;
+            }).join('');
+          }
+
+          // 1. Desktop Table Row
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50 transition text-xs';
+          tr.innerHTML = `
+            <td class="p-3 text-slate-400 font-mono">${index + 1}</td>
+            <td class="p-3 font-mono font-semibold text-slate-800 whitespace-nowrap">${log.date}</td>
+            <td class="p-3 whitespace-nowrap">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${log.day === 'Sunday' ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-800 border border-slate-200'}">
+                ${log.day}
+              </span>
+            </td>
+            <td class="p-3 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(log.name)}</td>
+            <td class="p-3 font-mono font-bold text-brand-700 whitespace-nowrap">${escapeHtml(log.vtp)}</td>
+            <td class="p-3 text-slate-600 whitespace-nowrap">${escapeHtml(log.mentor)}</td>
+            <td class="p-3 font-mono text-slate-600 whitespace-nowrap">${escapeHtml(log.contact)}</td>
+            <td class="p-3 min-w-[180px]">${violationBadges}</td>
+            <td class="p-3 text-slate-600 max-w-[180px] truncate" title="${escapeHtml(log.absentReason || '-')}">
+              ${escapeHtml(log.absentReason || '-')}
+            </td>
+            <td class="p-3 text-right whitespace-nowrap">
+              <div class="inline-flex items-center gap-1">
+                <button onclick="openEditLogModal(${log.id})" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition" title="Edit">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="confirmDeleteLog(${log.id})" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
+                  <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+
+          // 2. Mobile Card Item
+          const card = document.createElement('div');
+          card.className = 'bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 space-y-2.5';
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 border-b border-slate-200/70 pb-2">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(log.name)}</h4>
+                  <span class="font-mono text-[9px] px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-brand-700">${escapeHtml(log.vtp)}</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">Mentor: <span class="text-slate-600 font-semibold">${escapeHtml(log.mentor)}</span> &bull; ${escapeHtml(log.contact)}</p>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="openEditLogModal(${log.id})" class="p-1.5 text-slate-500 bg-white hover:text-brand-600 border border-slate-200 rounded-lg shadow-2xs">
+                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="confirmDeleteLog(${log.id})" class="p-1.5 text-slate-500 bg-white hover:text-red-600 border border-slate-200 rounded-lg shadow-2xs">
+                  <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] pt-0.5">
+              <span class="font-mono font-semibold text-slate-700">${log.date} (${log.day})</span>
+              <span class="text-[10px] text-slate-400 font-mono">${log.loggedAt || ''}</span>
+            </div>
+
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status:</div>
+              <div>${violationBadges}</div>
+            </div>
+
+            ${(log.absentReason && log.absentReason !== '-') ? `
+              <div class="bg-white p-2 rounded-lg border border-slate-200 text-[11px] text-slate-600">
+                <span class="font-bold text-slate-700">Reason:</span> ${escapeHtml(log.absentReason)}
+              </div>
+            ` : ''}
+          `;
+          mobileList.appendChild(card);
+        });
+      }
+
+      updateHeaderCounts();
+      lucide.createIcons();
+    }
+
+    function confirmDeleteLog(id) {
+      showConfirmModal(
+        'Delete Log Entry',
+        'Delete this entry from the active week?',
+        () => {
+          logsList = logsList.filter(item => item.id !== id);
+          persistLogs();
+          renderLogsTable();
+          showToast('Record deleted', 'info');
+        }
+      );
+    }
+
+    function clearActiveWeekLogs() {
+      const activeCount = logsList.filter(l => (l.weekKey || getWeekKey(l.date)) === activeWeekKey).length;
+      if (activeCount === 0) {
+        showToast('No records to clear in this week', 'info');
+        return;
+      }
+
+      showConfirmModal(
+        'Clear Week Log',
+        `Delete all ${activeCount} records for ${activeWeekKey}? Other weeks remain safely preserved.`,
+        () => {
+          logsList = logsList.filter(l => (l.weekKey || getWeekKey(l.date)) !== activeWeekKey);
+          persistLogs();
+          renderLogsTable();
+          showToast(`Cleared ${activeWeekKey}`, 'info');
+        }
+      );
+    }
+
+    function exportToExcel(onlySelectedWeek = false) {
+      const targetLogs = onlySelectedWeek 
+        ? logsList.filter(l => (l.weekKey || getWeekKey(l.date)) === activeWeekKey)
+        : [...logsList];
+
+      if (targetLogs.length === 0) {
+        showToast('No entries to export.', 'error');
+        return;
+      }
+
+      const sortedLogs = targetLogs.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const headers = [
+        "S.No",
+        "Date",
+        "Day",
+        "Student Name",
+        "VTP No.",
+        "Mentor Name",
+        "Contact No.",
+        "Violations Logged",
+        "Late Timing",
+        "Absent Reason",
+        "Student Representative",
+        "Week Assigned",
+        "Last Updated"
+      ];
+
+      const sheetAoA = [headers];
+      let serialCounter = 1;
+
+      for (let i = 0; i < sortedLogs.length; i++) {
+        const item = sortedLogs[i];
+        const itemWeek = item.weekKey || getWeekKey(item.date);
+
+        const row = [
+          serialCounter++,
+          item.date,
+          item.day,
+          item.name,
+          item.vtp,
+          item.mentor,
+          item.contact,
+          Array.isArray(item.violations) ? item.violations.join('; ') : item.violations,
+          item.lateSession || '-',
+          item.absentReason || '-',
+          item.representative || 'Taher Ahmedabadwala',
+          itemWeek,
+          item.loggedAt || ''
+        ];
+        sheetAoA.push(row);
+
+        if (i < sortedLogs.length - 1) {
+          const nextItem = sortedLogs[i + 1];
+          const currWeek = itemWeek;
+          const nextWeek = nextItem.weekKey || getWeekKey(nextItem.date);
+
+          if (currWeek !== nextWeek) {
+            sheetAoA.push([]);
+            sheetAoA.push([]);
+          } else if (item.date !== nextItem.date) {
+            sheetAoA.push([]);
+          }
+        }
+      }
+
+      const worksheet = XLSX.utils.aoa_to_sheet(sheetAoA);
+
+      worksheet['!cols'] = [
+        { wch: 6 },
+        { wch: 13 },
+        { wch: 13 },
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 34 },
+        { wch: 22 },
+        { wch: 35 },
+        { wch: 26 },
+        { wch: 16 },
+        { wch: 20 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, onlySelectedWeek ? activeWeekKey : "Weekly_Activity");
+
+      const today = new Date();
+      const scopeLabel = onlySelectedWeek ? `_${activeWeekKey}` : '_All_Weeks';
+      const filename = `Student_Activity${scopeLabel}_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.xlsx`;
+
+      XLSX.writeFile(workbook, filename);
+      showToast(`Downloaded ${sortedLogs.length} records to Excel!`, 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+
+      let icon = 'info';
+      let border = 'border-slate-200';
+      let bg = 'bg-white text-slate-900';
+      let iconColor = 'text-brand-600';
+
+      if (type === 'success') {
+        icon = 'check-circle';
+        border = 'border-emerald-200';
+        iconColor = 'text-emerald-600';
+      } else if (type === 'error') {
+        icon = 'alert-circle';
+        border = 'border-rose-200';
+        iconColor = 'text-rose-600';
+      }
+
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border ${border} ${bg} shadow-elevated text-xs font-semibold transition-all duration-300 transform translate-y-3 opacity-0 max-w-sm w-full sm:w-auto`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 ${iconColor} flex-shrink-0"></i>
+        <span class="flex-1">${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-3', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    function showConfirmModal(title, description, onConfirm) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDescription').textContent = description;
+      modalCallback = onConfirm;
+
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      confirmBtn.onclick = () => {
+        if (modalCallback) modalCallback();
+        closeModal();
+      };
+
+      document.getElementById('confirmModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('confirmModal').classList.add('hidden');
+      modalCallback = null;
+    }
+
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
+
