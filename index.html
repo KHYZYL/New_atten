@@ -90,7 +90,7 @@
         </div>
       </div>
 
-      <!-- Quick Actions Header (Adaptive Mobile Grid) -->
+      <!-- Quick Actions Header -->
       <div class="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0 w-full sm:w-auto">
         <button onclick="openAddStudentModal()" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold rounded-xl shadow-xs transition touch-manipulation">
           <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
@@ -122,7 +122,7 @@
           </div>
           <h2 class="text-lg sm:text-xl font-bold tracking-tight text-white">Activity Ledger by Week</h2>
           <p class="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed">
-            Switch between weeks to log, update or edit records. Fresh weeks automatically start with clean registers while master records remain intact.
+            Switch between weeks to log, update or edit records. Every student log retains Mentor Name and Contact Number.
           </p>
         </div>
 
@@ -145,7 +145,7 @@
     <!-- Interactive Grid: Trainee Search (Left) + Activity Input (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
       
-      <!-- Step 1: Student Search Card (5 cols on desktop) -->
+      <!-- Step 1: Student Search Card -->
       <div class="lg:col-span-5 space-y-4">
         <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card">
           <div class="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
@@ -202,7 +202,7 @@
                 <i data-lucide="user-search" class="w-4 h-4"></i>
               </div>
               <p class="text-xs font-bold text-slate-700">No Student Selected</p>
-              <p class="text-[11px] text-slate-400 mt-0.5">Pick an MBA student above to log activity</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Pick an MBA student above to preview mentor & contact</p>
             </div>
 
             <!-- Profile Info Card -->
@@ -224,18 +224,20 @@
               </div>
 
               <div class="mt-3.5 pt-3 border-t border-brand-100 grid grid-cols-1 gap-2 text-xs">
+                <!-- Dedicated Mentor Row -->
                 <div class="flex items-center justify-between bg-white px-2.5 py-2 rounded-lg border border-brand-100 shadow-2xs">
                   <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
                     <i data-lucide="award" class="w-3.5 h-3.5 text-brand-600"></i>
                     <span>Mentor (Col T):</span>
                   </span>
-                  <span class="font-bold text-slate-800 text-[11px] truncate max-w-[150px]" id="profileMentor">--</span>
+                  <span class="font-bold text-brand-900 text-[11px] truncate max-w-[180px] bg-brand-50/60 px-2 py-0.5 rounded" id="profileMentor">--</span>
                 </div>
 
+                <!-- Dedicated Phone Row -->
                 <div class="flex items-center justify-between bg-white px-2.5 py-2 rounded-lg border border-brand-100 shadow-2xs">
                   <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
                     <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-600"></i>
-                    <span>Contact:</span>
+                    <span>Contact (Col G):</span>
                   </span>
                   <div class="flex items-center gap-1.5">
                     <span class="font-mono font-bold text-slate-800 text-[11px]" id="profileContact">--</span>
@@ -253,7 +255,7 @@
         </div>
       </div>
 
-      <!-- Step 2: Activity Log Entry (7 cols on desktop) -->
+      <!-- Step 2: Activity Log Entry -->
       <div class="lg:col-span-7">
         <div class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card flex flex-col justify-between h-full">
           <div>
@@ -399,7 +401,7 @@
       </div>
     </div>
 
-    <!-- Step 3: Week Register Table with In-App Edit & Mobile Card Mode -->
+    <!-- Step 3: Week Register Table with Mentor Name Column -->
     <section id="exportSection" class="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-card space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
@@ -413,7 +415,7 @@
             </span>
           </div>
           <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-            Click edit (<i data-lucide="pencil" class="w-3 h-3 inline text-brand-600"></i>) to modify violations or notes anytime.
+            Full ledger displaying Student Name, Mentor Name, Contact No., and logged tags.
           </p>
         </div>
 
@@ -433,7 +435,7 @@
             type="text" 
             id="logFilterInput" 
             oninput="renderLogsTable()" 
-            placeholder="Search active logs..." 
+            placeholder="Search active logs by student, mentor..." 
             class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500 text-xs font-medium"
           >
         </div>
@@ -442,31 +444,26 @@
         </div>
       </div>
 
-      <!-- Responsive Desktop Table View (Hidden on mobile) -->
-      <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200 max-h-96">
-        <table class="w-full text-left text-xs text-slate-600">
+      <!-- Dedicated Scrollable Table with Mentor Name & Phone Columns -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-96 shadow-2xs">
+        <table class="w-full text-left text-xs text-slate-600 min-w-[780px]">
           <thead class="bg-slate-50 text-slate-900 font-bold sticky top-0 z-10 border-b border-slate-200">
             <tr>
-              <th class="p-3">#</th>
-              <th class="p-3">Date</th>
-              <th class="p-3">Day</th>
-              <th class="p-3">Student Name</th>
-              <th class="p-3">VTP No.</th>
-              <th class="p-3">Mentor Name</th>
-              <th class="p-3">Contact No.</th>
-              <th class="p-3">Violations Tagged</th>
-              <th class="p-3">Absent Reason</th>
-              <th class="p-3 text-right">Actions</th>
+              <th class="p-3 w-10">#</th>
+              <th class="p-3 whitespace-nowrap">Date</th>
+              <th class="p-3 whitespace-nowrap">Day</th>
+              <th class="p-3 whitespace-nowrap">Student Name</th>
+              <th class="p-3 whitespace-nowrap">VTP No.</th>
+              <th class="p-3 whitespace-nowrap bg-brand-50/50 text-brand-950">Mentor Name</th>
+              <th class="p-3 whitespace-nowrap">Contact No.</th>
+              <th class="p-3 whitespace-nowrap">Violations Tagged</th>
+              <th class="p-3 whitespace-nowrap">Absent Reason</th>
+              <th class="p-3 text-right whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody id="logsTableBody" class="divide-y divide-slate-100 bg-white font-sans">
           </tbody>
         </table>
-      </div>
-
-      <!-- Responsive Mobile Card List View (Visible on mobile screens) -->
-      <div id="logsMobileCardList" class="block md:hidden space-y-3">
-        <!-- Dynamically rendered mobile cards -->
       </div>
 
       <!-- Empty State -->
@@ -481,7 +478,7 @@
 
   </main>
 
-  <!-- Modal: In-App Edit Log Entry (Fully Mobile Responsive) -->
+  <!-- Modal: In-App Edit Log Entry with Mentor & Phone Fields -->
   <div id="editLogModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
       
@@ -511,6 +508,18 @@
           <div>
             <span class="text-slate-400 text-[10px] uppercase font-bold">Date & Day:</span>
             <p class="font-bold text-slate-900 truncate text-xs" id="editDateText">--</p>
+          </div>
+        </div>
+
+        <!-- Editable Mentor and Contact Row -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1 text-[10px] uppercase">Mentor Name (Col T):</label>
+            <input type="text" id="editMentorInput" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-brand-600">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1 text-[10px] uppercase">Contact No. (Col G):</label>
+            <input type="text" id="editContactInput" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-brand-600">
           </div>
         </div>
 
@@ -565,7 +574,7 @@
     </div>
   </div>
 
-  <!-- Modal: Add New Student (Mobile Responsive) -->
+  <!-- Modal: Add New Student -->
   <div id="addStudentModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-bottom duration-200">
       
@@ -806,8 +815,7 @@
 
     function loadPersistentMasterData() {
       try {
-        // Use v3 storage key to ensure newly supplied MBA Master Data supersedes mock data
-        const stored = localStorage.getItem('sat_master_trainees_mba_v3');
+        const stored = localStorage.getItem('sat_master_mba_batch_v4');
         if (stored) {
           masterData = JSON.parse(stored);
         } else {
@@ -823,7 +831,7 @@
 
     function persistMasterData() {
       try {
-        localStorage.setItem('sat_master_trainees_mba_v3', JSON.stringify(masterData));
+        localStorage.setItem('sat_master_mba_batch_v4', JSON.stringify(masterData));
         document.getElementById('masterTotalCount').textContent = masterData.length;
       } catch (e) {
         console.warn('LocalStorage error', e);
@@ -916,8 +924,38 @@
         trainee: item,
         nameNormalized: item.name.toLowerCase(),
         nameWords: item.name.toLowerCase().split(/\s+/),
-        vtpNormalized: item.vtp.toLowerCase()
+        vtpNormalized: (item.vtp || '').toLowerCase()
       }));
+    }
+
+    // Auto-resolve student from master dataset if not explicitly selected from dropdown
+    function resolveTrainee(typedText) {
+      if (selectedTrainee && selectedTrainee.name.toLowerCase() === typedText.toLowerCase()) {
+        return selectedTrainee;
+      }
+      const clean = typedText.trim().toLowerCase();
+      if (!clean) return null;
+
+      // Exact name match
+      let match = masterData.find(m => m.name.toLowerCase() === clean);
+      if (match) return match;
+
+      // Exact VTP match
+      match = masterData.find(m => (m.vtp || '').toLowerCase() === clean);
+      if (match) return match;
+
+      // Prefix match
+      match = masterData.find(m => m.name.toLowerCase().startsWith(clean));
+      if (match) return match;
+
+      // Fallback object
+      return {
+        rowNumber: 999,
+        name: typedText.trim(),
+        vtp: 'VTP',
+        mentor: 'Unassigned',
+        contact: 'N/A'
+      };
     }
 
     function onSearchInput(e) {
@@ -1024,12 +1062,12 @@
         item.innerHTML = `
           <div class="min-w-0 pr-2">
             <p class="text-xs font-bold text-slate-900 group-hover:text-brand-700 truncate">${escapeHtml(t.name)}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5 truncate">
-              Mentor: <strong class="text-slate-600 font-semibold">${escapeHtml(t.mentor)}</strong> &bull; Tel: <span class="font-mono text-slate-600">${escapeHtml(t.contact)}</span>
+            <p class="text-[10px] text-slate-500 mt-0.5 truncate">
+              Mentor: <strong class="text-slate-800 font-semibold">${escapeHtml(t.mentor || 'Unassigned')}</strong> &bull; Tel: <span class="font-mono text-slate-700 font-semibold">${escapeHtml(t.contact || 'N/A')}</span>
             </p>
           </div>
           <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-bold border border-slate-200">
-            ${escapeHtml(t.vtp)}
+            ${escapeHtml(t.vtp || 'VTP')}
           </span>
         `;
         item.onclick = () => selectTrainee(t);
@@ -1073,11 +1111,11 @@
 
       document.getElementById('profileAvatar').textContent = initials;
       document.getElementById('profileName').textContent = trainee.name;
-      document.getElementById('profileVtp').textContent = trainee.vtp;
-      document.getElementById('profileMentor').textContent = trainee.mentor;
-      document.getElementById('profileContact').textContent = trainee.contact;
+      document.getElementById('profileVtp').textContent = trainee.vtp || 'VTP';
+      document.getElementById('profileMentor').textContent = trainee.mentor || 'Unassigned';
+      document.getElementById('profileContact').textContent = trainee.contact || 'N/A';
 
-      const rawNumber = String(trainee.contact).replace(/[^0-9]/g, '');
+      const rawNumber = String(trainee.contact || '').replace(/[^0-9]/g, '');
       const callLink = document.getElementById('phoneCallLink');
       const waLink = document.getElementById('whatsappLink');
 
@@ -1116,9 +1154,17 @@
     }
 
     function saveLogEntry() {
-      if (!selectedTrainee) {
-        showToast('Please search and select a student first', 'error');
+      const typed = document.getElementById('traineeSearchInput').value.trim();
+      if (!typed) {
+        showToast('Please type or select a student first', 'error');
         document.getElementById('traineeSearchInput').focus();
+        return;
+      }
+
+      // Auto-resolve student if not clicked from list
+      const trainee = resolveTrainee(typed);
+      if (!trainee) {
+        showToast('Student could not be found in master records', 'error');
         return;
       }
 
@@ -1152,7 +1198,7 @@
 
       const existingIndex = logsList.findIndex(item => 
         item.date === dateVal && 
-        item.name.toLowerCase() === selectedTrainee.name.toLowerCase()
+        item.name.toLowerCase() === trainee.name.toLowerCase()
       );
 
       const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1187,24 +1233,28 @@
           combinedReason = 'No reason provided';
         }
 
+        // Always guarantee mentor and contact are properly retained
         existing.violations = combinedViolations.length > 0 ? combinedViolations : ["Present / Normal"];
         existing.hasViolations = combinedViolations.length > 0;
         existing.lateSession = existingSessions.length > 0 ? existingSessions.join(', ') : '-';
         existing.absentReason = combinedReason || '-';
+        existing.mentor = trainee.mentor || existing.mentor || 'Unassigned';
+        existing.contact = trainee.contact || existing.contact || 'N/A';
+        existing.vtp = trainee.vtp || existing.vtp || 'VTP';
         existing.weekKey = targetWeek;
         existing.loggedAt = currentTime;
 
-        showToast(`Updated entry for ${selectedTrainee.name}`, 'info');
+        showToast(`Updated entry for ${trainee.name}`, 'info');
       } else {
         const newLog = {
           id: Date.now(),
           date: dateVal,
           day: dayName,
           weekKey: targetWeek,
-          name: selectedTrainee.name,
-          vtp: selectedTrainee.vtp,
-          mentor: selectedTrainee.mentor,
-          contact: selectedTrainee.contact,
+          name: trainee.name,
+          vtp: trainee.vtp || 'VTP',
+          mentor: trainee.mentor || 'Unassigned',
+          contact: trainee.contact || 'N/A',
           violations: newViolations.length > 0 ? newViolations : ["Present / Normal"],
           hasViolations: newViolations.length > 0,
           lateSession: newLateSessions.length > 0 ? newLateSessions.join(', ') : '-',
@@ -1214,7 +1264,7 @@
         };
 
         logsList.unshift(newLog);
-        showToast(`Saved record for ${selectedTrainee.name}`, 'success');
+        showToast(`Saved record for ${trainee.name}`, 'success');
       }
 
       persistLogs();
@@ -1239,6 +1289,10 @@
       document.getElementById('editStudentName').textContent = `${log.name} (${log.vtp})`;
       document.getElementById('editDateText').textContent = `${log.date} (${log.day})`;
       document.getElementById('editModalSubtitle').textContent = `Assigned: ${log.weekKey || getWeekKey(log.date)}`;
+
+      // Populate mentor and contact fields
+      document.getElementById('editMentorInput').value = log.mentor || '';
+      document.getElementById('editContactInput').value = log.contact || '';
 
       const isLate = log.violations.some(v => v.includes('Late to class'));
       document.getElementById('editCheckLate').checked = isLate;
@@ -1305,6 +1359,8 @@
       logsList[logIndex].hasViolations = newViolations.length > 0;
       logsList[logIndex].lateSession = isLate ? lateSession : '-';
       logsList[logIndex].absentReason = (isAbsent && absentReason) ? absentReason : (isAbsent ? 'No reason provided' : '-');
+      logsList[logIndex].mentor = document.getElementById('editMentorInput').value.trim() || logsList[logIndex].mentor || 'Unassigned';
+      logsList[logIndex].contact = document.getElementById('editContactInput').value.trim() || logsList[logIndex].contact || 'N/A';
       logsList[logIndex].loggedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' (edited)';
 
       persistLogs();
@@ -1315,7 +1371,7 @@
 
     function persistLogs() {
       try {
-        localStorage.setItem('sat_records_log_weekly_v3', JSON.stringify(logsList));
+        localStorage.setItem('sat_records_log_weekly_v4', JSON.stringify(logsList));
       } catch (e) {
         console.warn('LocalStorage unavailable', e);
       }
@@ -1323,9 +1379,22 @@
 
     function loadStoredLogs() {
       try {
-        const stored = localStorage.getItem('sat_records_log_weekly_v3');
+        const stored = localStorage.getItem('sat_records_log_weekly_v4') || localStorage.getItem('sat_records_log_weekly_v3');
         if (stored) {
           logsList = JSON.parse(stored);
+          
+          // Auto backfill mentor and contact if missing in old stored logs
+          logsList.forEach(log => {
+            if (!log.mentor || log.mentor === 'Unassigned' || !log.contact || log.contact === 'N/A') {
+              const match = masterData.find(m => m.name.toLowerCase() === log.name.toLowerCase());
+              if (match) {
+                if (!log.mentor || log.mentor === 'Unassigned') log.mentor = match.mentor;
+                if (!log.contact || log.contact === 'N/A') log.contact = match.contact;
+                if (!log.vtp || log.vtp === 'VTP') log.vtp = match.vtp;
+              }
+            }
+          });
+          persistLogs();
         }
       } catch (e) {
         console.warn('Error loading logs', e);
@@ -1337,14 +1406,13 @@
       document.getElementById('logCountBadge').textContent = `${activeLogs.length} Logged`;
     }
 
+    // Render Table with Mentor Name and Contact Number guaranteed
     function renderLogsTable() {
       const tbody = document.getElementById('logsTableBody');
-      const mobileList = document.getElementById('logsMobileCardList');
       const emptyState = document.getElementById('logsEmptyState');
       const filterVal = (document.getElementById('logFilterInput')?.value || '').toLowerCase().trim();
 
       tbody.innerHTML = '';
-      mobileList.innerHTML = '';
 
       const weekLogs = logsList.filter(log => (log.weekKey || getWeekKey(log.date)) === activeWeekKey);
 
@@ -1352,8 +1420,8 @@
         if (!filterVal) return true;
         return (
           log.name.toLowerCase().includes(filterVal) ||
-          log.vtp.toLowerCase().includes(filterVal) ||
-          log.mentor.toLowerCase().includes(filterVal) ||
+          (log.vtp || '').toLowerCase().includes(filterVal) ||
+          (log.mentor || '').toLowerCase().includes(filterVal) ||
           log.day.toLowerCase().includes(filterVal) ||
           log.date.toLowerCase().includes(filterVal) ||
           log.violations.join(' ').toLowerCase().includes(filterVal) ||
@@ -1381,7 +1449,15 @@
             }).join('');
           }
 
-          // 1. Desktop Table Row
+          // Fallback check against masterData
+          const mentorName = log.mentor && log.mentor !== 'Unassigned' 
+            ? log.mentor 
+            : (masterData.find(m => m.name.toLowerCase() === log.name.toLowerCase())?.mentor || 'Unassigned');
+
+          const contactNo = log.contact && log.contact !== 'N/A' 
+            ? log.contact 
+            : (masterData.find(m => m.name.toLowerCase() === log.name.toLowerCase())?.contact || 'N/A');
+
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50 transition text-xs';
           tr.innerHTML = `
@@ -1393,9 +1469,14 @@
               </span>
             </td>
             <td class="p-3 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(log.name)}</td>
-            <td class="p-3 font-mono font-bold text-brand-700 whitespace-nowrap">${escapeHtml(log.vtp)}</td>
-            <td class="p-3 text-slate-600 whitespace-nowrap">${escapeHtml(log.mentor)}</td>
-            <td class="p-3 font-mono text-slate-600 whitespace-nowrap">${escapeHtml(log.contact)}</td>
+            <td class="p-3 font-mono font-bold text-brand-700 whitespace-nowrap">${escapeHtml(log.vtp || 'VTP')}</td>
+            <td class="p-3 font-bold text-slate-800 whitespace-nowrap bg-brand-50/30">
+              <span class="inline-flex items-center gap-1.5">
+                <i data-lucide="award" class="w-3.5 h-3.5 text-brand-600 inline flex-shrink-0"></i>
+                <span>${escapeHtml(mentorName)}</span>
+              </span>
+            </td>
+            <td class="p-3 font-mono text-slate-700 font-semibold whitespace-nowrap">${escapeHtml(contactNo)}</td>
             <td class="p-3 min-w-[180px]">${violationBadges}</td>
             <td class="p-3 text-slate-600 max-w-[180px] truncate" title="${escapeHtml(log.absentReason || '-')}">
               ${escapeHtml(log.absentReason || '-')}
@@ -1412,46 +1493,6 @@
             </td>
           `;
           tbody.appendChild(tr);
-
-          // 2. Mobile Card Item
-          const card = document.createElement('div');
-          card.className = 'bg-slate-50/90 border border-slate-200/90 rounded-xl p-3.5 space-y-2.5';
-          card.innerHTML = `
-            <div class="flex items-start justify-between gap-2 border-b border-slate-200/70 pb-2">
-              <div>
-                <div class="flex items-center gap-1.5">
-                  <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(log.name)}</h4>
-                  <span class="font-mono text-[9px] px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-brand-700">${escapeHtml(log.vtp)}</span>
-                </div>
-                <p class="text-[10px] text-slate-400 mt-0.5">Mentor: <span class="text-slate-600 font-semibold">${escapeHtml(log.mentor)}</span> &bull; ${escapeHtml(log.contact)}</p>
-              </div>
-              <div class="flex items-center gap-1">
-                <button onclick="openEditLogModal(${log.id})" class="p-1.5 text-slate-500 bg-white hover:text-brand-600 border border-slate-200 rounded-lg shadow-2xs">
-                  <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-                </button>
-                <button onclick="confirmDeleteLog(${log.id})" class="p-1.5 text-slate-500 bg-white hover:text-red-600 border border-slate-200 rounded-lg shadow-2xs">
-                  <i data-lucide="trash" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between text-[11px] pt-0.5">
-              <span class="font-mono font-semibold text-slate-700">${log.date} (${log.day})</span>
-              <span class="text-[10px] text-slate-400 font-mono">${log.loggedAt || ''}</span>
-            </div>
-
-            <div>
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status:</div>
-              <div>${violationBadges}</div>
-            </div>
-
-            ${(log.absentReason && log.absentReason !== '-') ? `
-              <div class="bg-white p-2 rounded-lg border border-slate-200 text-[11px] text-slate-600">
-                <span class="font-bold text-slate-700">Reason:</span> ${escapeHtml(log.absentReason)}
-              </div>
-            ` : ''}
-          `;
-          mobileList.appendChild(card);
         });
       }
 
@@ -1526,14 +1567,22 @@
         const item = sortedLogs[i];
         const itemWeek = item.weekKey || getWeekKey(item.date);
 
+        const mentorName = item.mentor && item.mentor !== 'Unassigned' 
+          ? item.mentor 
+          : (masterData.find(m => m.name.toLowerCase() === item.name.toLowerCase())?.mentor || 'Unassigned');
+
+        const contactNo = item.contact && item.contact !== 'N/A' 
+          ? item.contact 
+          : (masterData.find(m => m.name.toLowerCase() === item.name.toLowerCase())?.contact || 'N/A');
+
         const row = [
           serialCounter++,
           item.date,
           item.day,
           item.name,
-          item.vtp,
-          item.mentor,
-          item.contact,
+          item.vtp || 'VTP',
+          mentorName,
+          contactNo,
           Array.isArray(item.violations) ? item.violations.join('; ') : item.violations,
           item.lateSession || '-',
           item.absentReason || '-',
@@ -1565,9 +1614,9 @@
         { wch: 13 },
         { wch: 24 },
         { wch: 16 },
-        { wch: 22 },
-        { wch: 16 },
-        { wch: 34 },
+        { wch: 24 }, // Mentor Name
+        { wch: 16 }, // Contact No
+        { wch: 34 }, // Violations
         { wch: 22 },
         { wch: 35 },
         { wch: 26 },
